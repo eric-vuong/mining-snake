@@ -25,8 +25,8 @@ class BattlesnakeServer(object):
         print("INFO")
         return {
             "apiversion": "1",
-            "author": "",  # TODO: Your Battlesnake Username
-            "color": "#888888",  # TODO: Personalize
+            "author": "eric-vuong",  # TODO: Your Battlesnake Username
+            "color": "#000000",  # TODO: Personalize
             "head": "default",  # TODO: Personalize
             "tail": "default",  # TODO: Personalize
         }
