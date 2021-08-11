@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 # Configuration paramaters for the whole setup
 seed = 1337
 gamma = 0.99  # Discount factor for past rewards
@@ -76,7 +77,7 @@ def choose_move(data: dict) -> str:
 
     """
     # Random action for exploration
-    possible_moves = ["up", "down", "left", "right"]
+    possible_moves = [0,1,2,3] #["up", "down", "left", "right"]
     global frame_count
     global epsilon_random_frames
     global epsilon
@@ -165,9 +166,11 @@ def choose_move(data: dict) -> str:
 # run at the end of games to update
 def postgame(win):
   # update reward based on win or loss
-  rewards_history[len(rewards_history - 1)] = win
+  if len(rewards_history) > 0:
+    rewards_history[len(rewards_history) - 1] = win
+  if len(done_history) > 0:
   # update done
-  done_history[len(done_history - 1)] = 1
+    done_history[len(done_history) - 1] = 1
 
 
   # Get indices of samples for replay buffers

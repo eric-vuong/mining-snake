@@ -55,6 +55,8 @@ class BattlesnakeServer(object):
 
         # TODO - look at the server_logic.py file to see how we decide what move to return!
         move = server_logic.choose_move(data)
+        directions = ["up", "down", "left", "right"]
+        move = directions[move]
 
         return {"move": move}
         # run post turn
