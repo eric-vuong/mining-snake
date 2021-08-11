@@ -81,14 +81,8 @@ def choose_move(data: dict) -> str:
     global epsilon_random_frames
     global epsilon
     frame_count += 1
-    if frame_count < epsilon_random_frames or epsilon > np.random.rand(1)[0]:
-    # Take random action
-      move = np.random.choice(possible_moves)
-      print(f"{data['game']['id']} MOVE {data['turn']}: {move} picked from all valid options in {possible_moves}")
 
-      return move
-
-    # Not random
+    # process board data
     x = np.zeros([11,11,3])
 
     # Put data into rgb format
@@ -127,10 +121,22 @@ def choose_move(data: dict) -> str:
       for j in range(11):
         image[i][j] = np.sum(x[i][j])
     print(np.flip(image, 0))
-    # image is for display. x is the network input
-    # use x to predict a move
-    # possible_moves[0]. nn produces 0,1,2,3
 
+    # random move
+    if frame_count < epsilon_random_frames or epsilon > np.random.rand(1)[0]:
+    # Take random action
+      move = np.random.choice(possible_moves)
+    else:
+      # Predict action Q-values
+      # From environment state
+      state_tensor = tf.convert_to_tensor(x)
+      state_tensor = tf.expand_dims(state_tensor, 0)
+      action_probs = model(state_tensor, training=False)
+      # Take best action
+      action = tf.argmax(action_probs[0]).numpy()
+      move = possible_moves[action]
+
+    print(f"{data['game']['id']} MOVE {data['turn']}: {move} picked from all valid options in {possible_moves}")
     # POST MOVE 
     # Decay probability of taking random action
     global epsilon_interval
