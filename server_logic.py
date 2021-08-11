@@ -61,25 +61,25 @@ def choose_move(data: dict) -> str:
     #my_body = data["you"]["body"]  # A list of x/y coordinate dictionaries like [ {"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 2, "y": 0} ]
     # TODO: uncomment the lines below so you can see what this data looks like in your output!
     # print(f"~~~ Turn: {data['turn']}  Game Mode: {data['game']['ruleset']['name']} ~~~")
-    x = np.zeros([3,11,11])
+    x = np.zeros([11,11,3])
     
 
     
 
 # food
     for food in data['board']['food']:
-      x[0][food['y']][food['x']] = 1
+      x[food['y']][food['x']][0] = 100
 # self body
     i = len(data['you']['body'])
     for part in data['you']['body']:
         if i == len(data['you']['body']):
-            x[1][part['y']][part['x']] = data['you']['health']
+            x[part['y']][part['x']][1] = data['you']['health']
             i -= 1
         elif i != 1:
-            x[1][part['y']][part['x']] = data['you']['health'] + 1
+            x[part['y']][part['x']][1] = data['you']['health'] + 1
             i -= 1
         else:
-            x[1][part['y']][part['x']] = data['you']['health'] + 2
+            x[part['y']][part['x']][1] = data['you']['health'] + 2
 
       # other bodies
     i = 0
@@ -91,15 +91,14 @@ def choose_move(data: dict) -> str:
         j = len(snake['body'])
         for part in snake['body']:
             if j == len(snake['body']):
-                x[2][part['y']][part['x']] = snake['health']
+                x[part['y']][part['x']][2] = snake['health']
                 j -= 1
             elif j != 1:
-                x[2][part['y']][part['x']] = snake['health'] + 1
+                x[part['y']][part['x']][2] = snake['health'] + 1
                 j -= 1
             else:
-                x[2][part['y']][part['x']] = snake['health'] + 2
-    image = np.flip(x,1)        
-    print(image)
+                x[part['y']][part['x']][2] = snake['health'] + 2
+    image = x
     
     # explore random moves or predict best move with nn
     possible_moves = ["up", "down", "left", "right"]
