@@ -57,6 +57,7 @@ class BattlesnakeServer(object):
         move = server_logic.choose_move(data)
 
         return {"move": move}
+        # run post turn
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
@@ -66,8 +67,18 @@ class BattlesnakeServer(object):
         It's purely for informational purposes, you don't have to make any decisions here.
         """
         data = cherrypy.request.json
-        
-        print(f"{data['game']['id']} END")
+        win = -1
+        #print(f"{data['game']['id']} END")
+        if len(data['board']['snakes']) == 1:
+          for i in data['board']['snakes']:
+            if (i['name'] == "mining-snake"):
+              print("we won")
+              win = 1
+            else:
+              print("we lost")
+        else:
+          print("we lost")
+        server_logic.postgame(win)
         return "ok"
 
 
