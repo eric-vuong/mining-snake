@@ -50,10 +50,10 @@ running_reward = 0 # sum of scores
 episode_count = 0 # number of games played
 frame_count = 0
 # Number of frames to take random action and observe output
-epsilon_random_frames = 500
+epsilon_random_frames = 50000
 # Number of frames for exploration
-# lowered it from 1 000 000 to 100 000
-epsilon_greedy_frames = 100000
+# lowered it from 1 000 000 to 200 000
+epsilon_greedy_frames = 200000
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
 max_memory_length = 100000
@@ -91,22 +91,22 @@ def choose_move(data: dict) -> str:
 
     # Add food
     for food in data['board']['food']:
-        x[food['y']][food['x']][0] = 100
+        x[food['y']][food['x']][0] = 1
     
     # Add own body parts
     i = len(data['you']['body'])
     for part in data['you']['body']:
         if i == len(data['you']['body']):
             # Head
-            x[part['y']][part['x']][1] = data['you']['health'] + 100
+            x[part['y']][part['x']][1] = (data['you']['health'] + 155) / 255
             i -= 1
         elif i != 1:
             # Body
-            x[part['y']][part['x']][1] = data['you']['health'] + 50
+            x[part['y']][part['x']][1] = (data['you']['health'] + 75) / 255
             i -= 1
         else:
             # Tail
-            x[part['y']][part['x']][1] = data['you']['health']
+            x[part['y']][part['x']][1] = data['you']['health'] / 255
 
     # Add other snakes
     current_count = 0
@@ -119,15 +119,15 @@ def choose_move(data: dict) -> str:
         for part in snake['body']:
             if j == len(snake['body']):
                 # Head
-                x[part['y']][part['x']][2] = snake['health'] + 100
+                x[part['y']][part['x']][2] = (snake['health'] + 155) / 255
                 j -= 1
             elif j != 1:
                 # Body
-                x[part['y']][part['x']][2] = snake['health'] + 50
+                x[part['y']][part['x']][2] = (snake['health'] + 75) / 255
                 j -= 1
             else:
                 # Tail
-                x[part['y']][part['x']][2] = snake['health']
+                x[part['y']][part['x']][2] = snake['health'] / 255
     
     # Get image for debugging
     if debug == 1:
@@ -180,7 +180,7 @@ def choose_move(data: dict) -> str:
             reward += 0.25
         # Reward when another snake dies: 0.5
         if current_count < snake_count:
-            reward += 0.5
+            reward += 0.25
         # Only update if there is a reward
         if reward > 0:
             # Increment most recent reward
