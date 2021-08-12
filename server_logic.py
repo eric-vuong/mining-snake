@@ -7,6 +7,9 @@ from tensorflow.keras import layers
 
 debug=0
 
+# set to 1 to run without updating weights
+no_training = 1
+
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 # Configuration paramaters for the whole setup
 seed = 1337
@@ -137,6 +140,18 @@ def choose_move(data: dict) -> str:
                 image[i][j] = np.sum(x[i][j])
         if debug == 1 : print(np.flip(image, 0))
 
+    # Choose move only. Skip updating history
+    if no_training == 1:
+        # Predict action Q-values
+        # From environment state
+        state_tensor = tf.convert_to_tensor(x)
+        state_tensor = tf.expand_dims(state_tensor, 0)
+        action_probs = model(state_tensor, training=False)
+        # Take best action
+        action = tf.argmax(action_probs[0]).numpy()
+        move = possible_moves[action]
+        return move
+
     # Choose move
     if frame_count < epsilon_random_frames or epsilon > np.random.rand(1)[0]:
         # Take random action
@@ -199,6 +214,9 @@ def choose_move(data: dict) -> str:
 
 # run at the end of games to update
 def postgame(win):
+    # skip
+    if no_training == 1:
+        return 0,0,0
     # Add empty next state
     state_next_history.append(np.zeros([11,11,3]))
     # Update reward based on win or loss
@@ -278,5 +296,6 @@ def save(path):
     model.save(path)
 
 def open(path):
+    print("Opening model")
     global model
     model = keras.models.load_model(path)

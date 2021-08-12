@@ -6,7 +6,6 @@ import cherrypy
 import time
 
 import server_logic
-
 class BattlesnakeServer(object):
     """
     This is a simple Battlesnake server written in Python using the CherryPy Web Framework.
@@ -48,7 +47,7 @@ class BattlesnakeServer(object):
         """
         self.ready=False
         data = cherrypy.request.json
-        
+        server_logic.open('Lucy20210812153929')
         if self.debug == 1 : print(f"{data['game']['id']} START")
         return "ok"
 
@@ -76,7 +75,7 @@ class BattlesnakeServer(object):
         """
         This function is called when a game your snake was in ends.
         It's purely for informational purposes, you don't have to make any decisions here.
-        """
+        """ 
         data = cherrypy.request.json
         win = -1
         #print(data)
