@@ -98,15 +98,15 @@ def choose_move(data: dict) -> str:
     for part in data['you']['body']:
         if i == len(data['you']['body']):
             # Head
-            x[part['y']][part['x']][1] = data['you']['health']
+            x[part['y']][part['x']][1] = data['you']['health'] + 100
             i -= 1
         elif i != 1:
             # Body
-            x[part['y']][part['x']][1] = data['you']['health'] + 1
+            x[part['y']][part['x']][1] = data['you']['health'] + 50
             i -= 1
         else:
             # Tail
-            x[part['y']][part['x']][1] = data['you']['health'] + 2
+            x[part['y']][part['x']][1] = data['you']['health']
 
     # Add other snakes
     current_count = 0
@@ -119,15 +119,15 @@ def choose_move(data: dict) -> str:
         for part in snake['body']:
             if j == len(snake['body']):
                 # Head
-                x[part['y']][part['x']][2] = snake['health']
+                x[part['y']][part['x']][2] = snake['health'] + 100
                 j -= 1
             elif j != 1:
                 # Body
-                x[part['y']][part['x']][2] = snake['health'] + 1
+                x[part['y']][part['x']][2] = snake['health'] + 50
                 j -= 1
             else:
                 # Tail
-                x[part['y']][part['x']][2] = snake['health'] + 2
+                x[part['y']][part['x']][2] = snake['health']
     
     # Get image for debugging
     if debug == 1:
@@ -175,9 +175,9 @@ def choose_move(data: dict) -> str:
     # Update reward of previous action
     if data['turn'] != 0:
         reward = 0
-        # Reward for eating food: 0.1
+        # Reward for eating food: 0.25
         if data['you']['health'] == 100:
-            reward += 0.1
+            reward += 0.25
         # Reward when another snake dies: 0.5
         if current_count < snake_count:
             reward += 0.5
@@ -202,15 +202,23 @@ def postgame(win):
     # Add empty next state
     state_next_history.append(np.zeros([11,11,3]))
     # Update reward based on win or loss
+    global running_reward
     if len(rewards_history) > 0:
-        rewards_history[len(rewards_history) - 1] = win
-        global running_reward
+        rewards_history[len(rewards_history) - 1] += win
         running_reward += win
         
     # Update done
     if len(done_history) > 0:
         done_history[len(done_history) - 1] = 1
         
+    # Limit the state and reward history
+    # Delete entire history when it exceeds max length
+    if len(rewards_history) > max_memory_length:
+        del rewards_history[:]
+        del state_history[:]
+        del state_next_history[:]
+        del action_history[:]
+        del done_history[:]
         
     # Update based on batch_size after each game
     if len(done_history) > batch_size:
@@ -254,20 +262,14 @@ def postgame(win):
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
     
-    # Update every 100 games
-    if episode_count % update_target_network == 0:
-        # Update the the target network with new weights
-        model_target.set_weights(model.get_weights())
-        return frame_count, loss.numpy(), running_reward
-
-    # Limit the state and reward history
-    if len(rewards_history) > max_memory_length:
-        del rewards_history[:1]
-        del state_history[:1]
-        del state_next_history[:1]
-        del action_history[:1]
-        del done_history[:1]
-    return 0, loss.numpy(), running_reward
+        # Update every 100 games
+        if episode_count % update_target_network == 0:
+            # Update the the target network with new weights
+            model_target.set_weights(model.get_weights())
+            return frame_count, loss.numpy(), running_reward
+        
+    # No loss to return
+    return 0, 0, running_reward
 
 def save(path):
     print("saving to "+path)
