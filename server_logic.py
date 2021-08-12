@@ -59,8 +59,8 @@ epsilon_greedy_frames = 200000
 max_memory_length = 100000
 
 # How often to update the target network
-# lowered it from 10000 to 100, so it updates every 100 games
-update_target_network = 100
+# lowered it from 10000 to 1000, so it updates every 1000 games
+update_target_network = 1000
 # Using huber loss for stability
 loss_function = keras.losses.Huber()
 
@@ -262,7 +262,7 @@ def postgame(win):
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
     
-        # Update every 100 games
+        # Update every 1000 games
         if episode_count % update_target_network == 0:
             # Update the the target network with new weights
             model_target.set_weights(model.get_weights())
