@@ -50,17 +50,17 @@ running_reward = 0 # sum of scores
 episode_count = 0 # number of games played
 frame_count = 0
 # Number of frames to take random action and observe output
-epsilon_random_frames = 50000
+epsilon_random_frames = 10000
 # Number of frames for exploration
 # lowered it from 1 000 000 to 200 000
-epsilon_greedy_frames = 200000
+epsilon_greedy_frames = 20000
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
 max_memory_length = 100000
 
 # How often to update the target network
-# lowered it from 10000 to 1000, so it updates every 1000 games
-update_target_network = 1000
+# lowered it from 10000 to 100, so it updates every 100 games
+update_target_network = 500
 # Using huber loss for stability
 loss_function = keras.losses.Huber()
 
@@ -135,7 +135,7 @@ def choose_move(data: dict) -> str:
         for i in range(11):
             for j in range(11):
                 image[i][j] = np.sum(x[i][j])
-        print(np.flip(image, 0))
+        if debug == 1 : print(np.flip(image, 0))
 
     # Choose move
     if frame_count < epsilon_random_frames or epsilon > np.random.rand(1)[0]:
@@ -177,14 +177,14 @@ def choose_move(data: dict) -> str:
         reward = 0
         # Reward for eating food: 0.25
         if data['you']['health'] == 100:
-            reward += 0.25
+            reward += 0.5
         # Reward when another snake dies: 0.5
         if current_count < snake_count:
-            reward += 0.25
+            reward += 1
         # Only update if there is a reward
-        if reward > 0:
+        if reward > 0 & len(rewards_history) > 0:
             # Increment most recent reward
-            rewards_history[len(rewards_history) - 1] = reward
+            rewards_history[-1] = reward
             
             # Track global results
             global running_reward
@@ -204,13 +204,14 @@ def postgame(win):
     # Update reward based on win or loss
     global running_reward
     if len(rewards_history) > 0:
-        rewards_history[len(rewards_history) - 1] += win
+        rewards_history[-1] += win
         running_reward += win
         
     # Update done
     if len(done_history) > 0:
         done_history[len(done_history) - 1] = 1
         
+    report_loss = None    
     # Limit the state and reward history
     # Delete entire history when it exceeds max length
     if len(rewards_history) > max_memory_length:
@@ -257,16 +258,17 @@ def postgame(win):
             q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
             # Calculate loss between new Q-value and old Q-value
             loss = loss_function(updated_q_values, q_action)
+            report_loss = loss.numpy()
 
         # Backpropagation
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
     
-        # Update every 1000 games
+        # Update every 100 games
         if episode_count % update_target_network == 0:
             # Update the the target network with new weights
             model_target.set_weights(model.get_weights())
-            return frame_count, loss.numpy(), running_reward
+            return frame_count, report_loss, running_reward
         
     # No loss to return
     return 0, 0, running_reward
