@@ -184,7 +184,7 @@ def choose_move(data: dict) -> str:
         # Only update if there is a reward
         if reward > 0:
             # Increment most recent reward
-            rewards_history[len(rewards_history) - 1] = rewards
+            rewards_history[len(rewards_history) - 1] = reward
             
             # Track global results
             global running_reward
